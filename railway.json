@@ -5,7 +5,7 @@
   },
   "deploy": {
     "startCommand": "cd backend && /app/.venv/bin/gunicorn config.wsgi --workers 4 --bind 0.0.0.0:$PORT --timeout 120",
-    "releaseCommand": "cd backend && /app/.venv/bin/python manage.py migrate --noinput && /app/.venv/bin/python manage.py collectstatic --noinput",
+    "releaseCommand": "cd backend && /app/.venv/bin/python manage.py migrate --noinput && /app/.venv/bin/python manage.py collectstatic --noinput && /app/.venv/bin/python manage.py create_superadmin",
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 3
   }

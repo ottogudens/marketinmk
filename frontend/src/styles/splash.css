@@ -1,0 +1,215 @@
+/* Splash Page Styles */
+
+:root {
+  --primary: #ff6b35;
+  --secondary: #004e89;
+  --success: #2ecc71;
+  --danger: #e74c3c;
+  --light: #ecf0f1;
+  --dark: #2c3e50;
+  --border-radius: 12px;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.splash-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(135deg, var(--secondary) 0%, #1d3557 100%);
+  color: #333;
+  padding: 20px;
+}
+
+/* Header */
+.splash-header {
+  flex: 0 0 auto;
+  text-align: center;
+  padding: 40px 20px 20px;
+}
+
+.logo h1 {
+  font-size: 2.5rem;
+  margin-bottom: 8px;
+  color: white;
+  font-weight: 700;
+}
+
+.logo p {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 1rem;
+  margin: 0;
+}
+
+/* Main Content */
+.splash-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  max-width: 500px;
+  margin: 0 auto;
+  width: 100%;
+  padding: 40px 20px;
+}
+
+.welcome-section {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.welcome-section h2 {
+  font-size: 2rem;
+  color: white;
+  margin-bottom: 12px;
+}
+
+.welcome-section p {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 1rem;
+}
+
+/* Error Banner */
+.error-banner {
+  background-color: var(--danger);
+  color: white;
+  padding: 12px 16px;
+  border-radius: var(--border-radius);
+  margin-bottom: 20px;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+/* OAuth Section */
+.oauth-section {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.oauth-btn {
+  width: 100%;
+  padding: 14px 20px;
+  font-size: 1rem;
+  font-weight: 600;
+  border: none;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  transition: all 0.3s ease;
+  color: white;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.oauth-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+.oauth-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.oauth-btn .icon {
+  font-size: 1.3rem;
+}
+
+.facebook-btn {
+  background-color: #1877f2;
+}
+
+.facebook-btn:hover:not(:disabled) {
+  background-color: #165fe6;
+}
+
+.instagram-btn {
+  background: linear-gradient(135deg, #833ab4, #fd1d1d, #fcaf45);
+}
+
+.instagram-btn:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.whatsapp-btn {
+  background-color: #25d366;
+}
+
+.whatsapp-btn:hover:not(:disabled) {
+  background-color: #20ba5a;
+}
+
+/* Loading */
+.loading {
+  text-align: center;
+  color: white;
+  font-size: 1rem;
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* Footer */
+.splash-footer {
+  flex: 0 0 auto;
+  text-align: center;
+  padding: 20px;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.9rem;
+}
+
+.splash-footer a {
+  color: white;
+  text-decoration: none;
+  font-weight: 600;
+  transition: opacity 0.3s ease;
+}
+
+.splash-footer a:hover {
+  opacity: 0.8;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .splash-header {
+    padding: 30px 20px 15px;
+  }
+
+  .logo h1 {
+    font-size: 2rem;
+  }
+
+  .welcome-section h2 {
+    font-size: 1.5rem;
+  }
+
+  .oauth-btn {
+    padding: 12px 16px;
+    font-size: 0.95rem;
+  }
+}

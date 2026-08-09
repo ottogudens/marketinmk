@@ -4,8 +4,8 @@
     "builder": "NIXPACKS"
   },
   "deploy": {
-    "startCommand": "cd backend && gunicorn config.wsgi --workers 4 --bind 0.0.0.0:$PORT --timeout 120",
-    "releaseCommand": "cd backend && python manage.py migrate --noinput && python manage.py collectstatic --noinput",
+    "startCommand": "cd backend && /app/.venv/bin/gunicorn config.wsgi --workers 4 --bind 0.0.0.0:$PORT --timeout 120",
+    "releaseCommand": "cd backend && /app/.venv/bin/python manage.py migrate --noinput && /app/.venv/bin/python manage.py collectstatic --noinput",
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 3
   }

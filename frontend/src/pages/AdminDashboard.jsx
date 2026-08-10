@@ -151,7 +151,7 @@ export default function AdminDashboard() {
 
       {/* Tabs */}
       <nav className="admin-tabs">
-        {['overview', 'mikrotik', 'sessions', 'clients', 'offers'].map(tab => (
+        {['overview', 'mikrotik', 'docs', 'sessions', 'clients', 'offers'].map(tab => (
           <button
             key={tab}
             className={`tab-btn ${activeTab === tab ? 'active' : ''}`}
@@ -160,6 +160,7 @@ export default function AdminDashboard() {
             {{
               overview: '🏠 Resumen General',
               mikrotik: '🌐 Routers MikroTik & Wireguard VPN',
+              docs: '📖 Manual Integración Redes Sociales',
               sessions: '📶 Sesiones',
               clients: '👥 Clientes',
               offers: '🎁 Ofertas'
@@ -167,6 +168,83 @@ export default function AdminDashboard() {
           </button>
         ))}
       </nav>
+
+      {/* TAB: MANUAL INTEGRACION REDES SOCIALES */}
+      {activeTab === 'docs' && (
+        <div className="social-docs-view">
+          <div className="docs-header-card">
+            <h2>📖 Manual Paso a Paso: Configuración de Redes Sociales (OAuth 2.0)</h2>
+            <p>Sigue estas instrucciones precisas para conectar la autenticación de Facebook, Instagram y WhatsApp con tu portal Hotspot.</p>
+          </div>
+
+          <div className="docs-grid">
+            {/* Facebook Login */}
+            <div className="doc-card">
+              <div className="doc-card-title">
+                <span className="doc-icon fb">📘</span>
+                <h3>1. Integración con Facebook Login</h3>
+              </div>
+              <ol className="doc-steps">
+                <li>Ingresa a <a href="https://developers.facebook.com/" target="_blank" rel="noreferrer">Meta for Developers</a> e inicia sesión.</li>
+                <li>Ve a <strong>Mis Apps</strong> → <strong>Crear App</strong> → Selecciona el tipo <strong>"Consumidor"</strong> o <strong>"Ninguno"</strong>.</li>
+                <li>En el panel lateral, agrega el producto <strong>"Inicio de sesión con Facebook"</strong>.</li>
+                <li>Dirígete a <strong>Configuración de la App → Básica</strong> y copia tu <strong>App ID</strong> y <strong>App Secret</strong>.</li>
+                <li>En <strong>Inicio de sesión con Facebook → Configuración</strong>, agrega las URLs de redirección permitidas:
+                  <pre className="code-box">
+                    {`URLs de redirección de OAuth válidas:\nhttps://tu-dominio.railway.app/callback/facebook\nhttp://localhost:5173/callback/facebook`}
+                  </pre>
+                </li>
+                <li>Pega tus credenciales en el archivo <code>.env</code> de Railway:
+                  <pre className="code-box">
+                    {`FACEBOOK_APP_ID=tu_app_id\nFACEBOOK_APP_SECRET=tu_app_secret`}
+                  </pre>
+                </li>
+              </ol>
+            </div>
+
+            {/* Instagram Auth */}
+            <div className="doc-card">
+              <div className="doc-card-title">
+                <span className="doc-icon ig">📸</span>
+                <h3>2. Integración con Instagram Basic Display</h3>
+              </div>
+              <ol className="doc-steps">
+                <li>En la misma app de <a href="https://developers.facebook.com/" target="_blank" rel="noreferrer">Meta Developers</a>, ve a <strong>Añadir Producto</strong> → Selecciona <strong>"Instagram Basic Display"</strong>.</li>
+                <li>Haz clic en <strong>Crear nueva aplicación de Instagram</strong>.</li>
+                <li>En la sección <strong>OAuth Redirect URIs</strong>, registra exactamente la siguiente URL:
+                  <pre className="code-box">
+                    {`URI de redirección válida de OAuth:\nhttps://tu-dominio.railway.app/callback/instagram`}
+                  </pre>
+                </li>
+                <li>Copia la <strong>Instagram App ID</strong> y el <strong>Instagram App Secret</strong>.</li>
+                <li>Configura las variables de entorno en tu panel de Railway:
+                  <pre className="code-box">
+                    {`INSTAGRAM_APP_ID=tu_instagram_app_id\nINSTAGRAM_APP_SECRET=tu_instagram_app_secret`}
+                  </pre>
+                </li>
+              </ol>
+            </div>
+
+            {/* WhatsApp Business / Twilio */}
+            <div className="doc-card full">
+              <div className="doc-card-title">
+                <span className="doc-icon wa">💬</span>
+                <h3>3. Configuración de Mensajería WhatsApp (Twilio Sandbox / Prod)</h3>
+              </div>
+              <ol className="doc-steps">
+                <li>Accede a tu consola en <a href="https://console.twilio.com/" target="_blank" rel="noreferrer">Twilio Console</a>.</li>
+                <li>Obtén tu <strong>Account SID</strong> y <strong>Auth Token</strong> desde el Dashboard principal.</li>
+                <li>Ve a <strong>Messaging → Try it out → Send a WhatsApp message</strong> para obtener tu número Sandbox (ej: <code>+14155238886</code>).</li>
+                <li>Configura las credenciales en Railway para que Celery envíe ofertas automáticas cada 2 horas:
+                  <pre className="code-box">
+                    {`TWILIO_ACCOUNT_SID=ACXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\nTWILIO_AUTH_TOKEN=your_auth_token_here\nTWILIO_WHATSAPP_NUMBER=+14155238886`}
+                  </pre>
+                </li>
+              </ol>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* TAB: MIKROTIK & WIREGUARD VPN */}
       {activeTab === 'mikrotik' && (

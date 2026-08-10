@@ -193,3 +193,16 @@ LOGGING = {
 SESSION_COOKIE_SECURE = not DEBUG
 SESSION_COOKIE_HTTPONLY = True
 CSRF_COOKIE_SECURE = not DEBUG
+
+# CSRF Trusted Origins — requerido para Django Admin y formularios en HTTPS
+# Railway usa *.up.railway.app y *.railway.app
+_TRUSTED_ORIGINS = [
+    'https://*.railway.app',
+    'https://*.up.railway.app',
+]
+# Agregar dominios adicionales desde variable de entorno (separados por coma)
+_extra_origins = config('CSRF_TRUSTED_ORIGINS', default='')
+if _extra_origins:
+    _TRUSTED_ORIGINS += [o.strip() for o in _extra_origins.split(',') if o.strip()]
+
+CSRF_TRUSTED_ORIGINS = _TRUSTED_ORIGINS

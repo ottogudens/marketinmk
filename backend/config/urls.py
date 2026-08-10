@@ -5,7 +5,7 @@ from django.conf.urls.static import static
 from rest_framework.routers import DefaultRouter
 from rest_framework.authtoken.views import obtain_auth_token
 
-from apps.clients.views import ClientViewSet, SessionViewSet, ClientInteractionViewSet
+from apps.clients.views import ClientViewSet, SessionViewSet, ClientInteractionViewSet, LoyaltyProgramViewSet, pos_webhook
 from apps.products.views import (
     CategoryViewSet, ProductViewSet, OfferViewSet,
     OfferRedemptionViewSet, OfferViewViewSet, CouponViewSet,
@@ -20,6 +20,7 @@ router = DefaultRouter()
 router.register(r'clients', ClientViewSet, basename='client')
 router.register(r'sessions', SessionViewSet, basename='session')
 router.register(r'interactions', ClientInteractionViewSet, basename='interaction')
+router.register(r'loyalty', LoyaltyProgramViewSet, basename='loyalty')
 
 # Productos y Ofertas
 router.register(r'categories', CategoryViewSet, basename='category')
@@ -48,6 +49,7 @@ urlpatterns = [
     path('api/coupons/validate/', validate_coupon, name='validate_coupon'),
     path('api/payments/create/', create_payment, name='create_payment'),
     path('api/payments/webhook/', payment_webhook, name='payment_webhook'),
+    path('api/pos/webhook/', pos_webhook, name='pos_webhook'),
     
     # OAuth Social Auth
     path('auth/', include('social_django.urls', namespace='social')),

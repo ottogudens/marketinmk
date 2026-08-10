@@ -125,3 +125,66 @@ class ClientInteraction(models.Model):
     
     def __str__(self):
         return f"{self.client} - {self.interaction_type}"
+
+
+class LoyaltyProgram(models.Model):
+    """Programa de lealtad por cliente"""
+    TIER_CHOICES = [
+        ('bronze', 'Bronce'),
+        ('silver', 'Plata'),
+        ('gold', 'Oro'),
+        ('platinum', 'Platino'),
+    ]
+
+    client = models.OneToOneField(Client, on_delete=models.CASCADE, related_name='loyalty_program')
+    total_points = models.IntegerField(default=0)
+    tier = models.CharField(max_length=20, choices=TIER_CHOICES, default='bronze')
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'loyalty_programs'
+
+    def update_tier(self):
+        if self.total_points >= 3000:
+            self.tier = 'platinum'
+        elif self.total_points >= 1500:
+            self.tier = 'gold'
+        elif self.total_points >= 500:
+            self.tier = 'silver'
+        else:
+            self.tier = 'bronze'
+        self.save()
+
+    def __str__(self):
+        return f"Programa de Lealtad - {self.client.full_name} ({self.tier.capitalize()}: {self.total_points} pts)"
+
+
+class LoyaltyTransaction(models.Model):
+    """Transacciones de puntos del programa de lealtad"""
+    program = models.ForeignKey(LoyaltyProgram, on_delete=models.CASCADE, related_name='transactions')
+    points = models.IntegerField()
+    description = models.CharField(max_length=255)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'loyalty_transactions'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.program.client.full_name}: {self.points} pts - {self.description}"
+
+
+class Purchase(models.Model):
+    """Registro de compras fisicas / TPV POS"""
+    client = models.ForeignKey(Client, on_delete=models.CASCADE, related_name='purchases')
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    pos_terminal_id = models.CharField(max_length=100, blank=True, null=True)
+    transaction_reference = models.CharField(max_length=255, blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'purchases'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Compra {self.client.full_name}: ${self.amount}"

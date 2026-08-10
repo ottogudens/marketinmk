@@ -225,3 +225,79 @@ class ClientInteractionViewSet(viewsets.ModelViewSet):
                 {'error': str(e)},
                 status=status.HTTP_400_BAD_REQUEST
             )
+
+
+from .models import LoyaltyProgram, LoyaltyTransaction, Purchase
+from rest_framework.decorators import api_view, permission_classes as perm_dec
+
+@api_view(['POST'])
+@perm_dec([AllowAny])
+def pos_webhook(request):
+    """
+    POST /api/pos/webhook/
+    Webhook para recibir ventas desde TPV / POS físico
+    Body: { "mac_address": "...", "amount": 15000, "pos_terminal_id": "POS-01", "reference": "REF123" }
+    """
+    mac_address = request.data.get('mac_address')
+    amount = float(request.data.get('amount', 0))
+    pos_terminal_id = request.data.get('pos_terminal_id', 'POS-GENERAL')
+    reference = request.data.get('reference', '')
+
+    if not mac_address or amount <= 0:
+        return Response({'error': 'mac_address y amount son requeridos'}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        client = Client.objects.get(mac_address=mac_address)
+
+        # 1. Registrar Compra
+        purchase = Purchase.objects.create(
+            client=client,
+            amount=amount,
+            pos_terminal_id=pos_terminal_id,
+            transaction_reference=reference
+        )
+
+        # 2. Sumar puntos al Programa de Lealtad (100 CLP / $1 = 1 punto)
+        points_earned = int(amount / 100) if amount >= 100 else 1
+        program, _ = LoyaltyProgram.objects.get_or_create(client=client)
+        program.total_points += points_earned
+        program.update_tier()
+
+        LoyaltyTransaction.objects.create(
+            program=program,
+            points=points_earned,
+            description=f"Compra TPV {pos_terminal_id} ${amount}"
+        )
+
+        return Response({
+            'message': 'Venta registrada y puntos acreditados',
+            'purchase_id': purchase.id,
+            'client': client.full_name,
+            'points_earned': points_earned,
+            'total_points': program.total_points,
+            'tier': program.tier
+        }, status=status.HTTP_201_CREATED)
+
+    except Client.DoesNotExist:
+        return Response({'error': 'Cliente no encontrado para la MAC provista'}, status=status.HTTP_404_NOT_FOUND)
+
+
+class LoyaltyProgramViewSet(viewsets.ReadOnlyModelViewSet):
+    """API para consultar estado de lealtad"""
+    permission_classes = [IsAuthenticated]
+
+    @action(detail=False, methods=['get'])
+    def my_status(self, request):
+        """GET /api/loyalty/my_status/"""
+        try:
+            client = request.user.client
+            program, _ = LoyaltyProgram.objects.get_or_create(client=client)
+            transactions = list(program.transactions.values('points', 'description', 'created_at')[:10])
+
+            return Response({
+                'total_points': program.total_points,
+                'tier': program.tier,
+                'recent_transactions': transactions
+            })
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)

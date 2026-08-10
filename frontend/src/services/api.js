@@ -101,4 +101,9 @@ export const paymentService = {
   create: (data) => api.post('/payments/create/', data),
 };
 
+// ============ Programa de Lealtad ============
+export const loyaltyService = {
+  getMyStatus: () => api.get('/loyalty/my_status/'),
+};
+
 export default api;

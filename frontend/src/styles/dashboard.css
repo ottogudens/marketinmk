@@ -249,3 +249,58 @@
   padding: 4px 10px;
   border-radius: 6px;
 }
+
+/* Loyalty Banner */
+.loyalty-banner {
+  max-width: 1200px;
+  margin: 0 auto 30px;
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  border: 1px solid #334155;
+  border-radius: var(--border-radius);
+  padding: 20px 24px;
+  color: white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.loyalty-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.tier-badge {
+  font-weight: 700;
+  font-size: 0.85rem;
+  padding: 6px 14px;
+  border-radius: 20px;
+  text-transform: uppercase;
+}
+
+.tier-badge.bronze { background: #78350f; color: #fef3c7; }
+.tier-badge.silver { background: #475569; color: #f1f5f9; }
+.tier-badge.gold { background: #b45309; color: #fef08a; }
+.tier-badge.platinum { background: #4338ca; color: #e0e7ff; }
+
+.points-display {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.points-number {
+  font-size: 2rem;
+  font-weight: 800;
+  color: #38bdf8;
+}
+
+.points-label {
+  font-size: 0.85rem;
+  color: #94a3b8;
+}
+
+.loyalty-tip {
+  margin: 0;
+  font-size: 0.82rem;
+  color: #64748b;
+}

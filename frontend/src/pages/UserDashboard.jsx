@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { offerService, interactionService, clientService, analyticsService } from '../services/api';
+import { offerService, interactionService, clientService, analyticsService, loyaltyService } from '../services/api';
 import OfferCard from '../components/OfferCard';
 import '../styles/dashboard.css';
 
@@ -11,6 +11,7 @@ const UserDashboard = () => {
   const [offers, setOffers] = useState([]);
   const [statistics, setStatistics] = useState(null);
   const [aiSuggestions, setAiSuggestions] = useState([]);
+  const [loyaltyStatus, setLoyaltyStatus] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -23,7 +24,17 @@ const UserDashboard = () => {
     loadOffers();
     loadStatistics();
     loadAISuggestions();
+    loadLoyaltyStatus();
   }, [client]);
+
+  const loadLoyaltyStatus = async () => {
+    try {
+      const response = await loyaltyService.getMyStatus();
+      setLoyaltyStatus(response.data);
+    } catch (err) {
+      console.error('Error loading loyalty status:', err);
+    }
+  };
 
   const loadAISuggestions = async () => {
     try {
@@ -101,6 +112,22 @@ const UserDashboard = () => {
           </button>
         </div>
       </header>
+
+      {/* Loyalty Program Section */}
+      {loyaltyStatus && (
+        <section className="loyalty-banner">
+          <div className="loyalty-info">
+            <span className={`tier-badge ${loyaltyStatus.tier}`}>
+              👑 Nivel {loyaltyStatus.tier?.toUpperCase()}
+            </span>
+            <div className="points-display">
+              <span className="points-number">{loyaltyStatus.total_points}</span>
+              <span className="points-label">Puntos Acumulados</span>
+            </div>
+          </div>
+          <p className="loyalty-tip">Acumula 1 punto por cada $100 en compras escaneando tu conexión WiFi en caja.</p>
+        </section>
+      )}
 
       {/* Statistics */}
       {statistics && (

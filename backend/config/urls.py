@@ -30,6 +30,8 @@ router.register(r'offer-views', OfferViewViewSet, basename='offer-view')
 # Analytics
 router.register(r'analytics', AnalyticsViewSet, basename='analytics')
 
+from apps.clients.oauth_views import oauth_callback, logout_user, get_current_user
+
 urlpatterns = [
     # Admin
     path('admin/', admin.site.urls),
@@ -38,6 +40,9 @@ urlpatterns = [
     path('api/', include(router.urls)),
     path('api-auth/', include('rest_framework.urls')),
     path('api/token-auth/', obtain_auth_token, name='api_token_auth'),
+    path('api/auth/callback/<str:provider>/', oauth_callback, name='oauth_callback'),
+    path('api/auth/logout/', logout_user, name='logout'),
+    path('api/auth/me/', get_current_user, name='current_user'),
     
     # OAuth Social Auth
     path('auth/', include('social_django.urls', namespace='social')),

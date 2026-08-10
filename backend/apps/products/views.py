@@ -225,3 +225,151 @@ class OfferViewViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     filterset_fields = ['offer', 'client', 'clicked']
     ordering = ['-viewed_at']
+
+
+from .models import Coupon, CouponRedemption as CouponRedemptModel, Payment
+from .serializers import CouponSerializer, PaymentSerializer
+from rest_framework.decorators import api_view, permission_classes as perm_decorator
+
+class CouponViewSet(viewsets.ModelViewSet):
+    """API para cupones (Admin y consulta)"""
+    queryset = Coupon.objects.all()
+    serializer_class = CouponSerializer
+    permission_classes = [IsAuthenticated]
+    filterset_fields = ['is_active', 'offer']
+    search_fields = ['code']
+
+
+@api_view(['POST'])
+@perm_decorator([IsAuthenticated])
+def validate_coupon(request):
+    """
+    POST /api/coupons/validate/
+    Body: { "code": "DESCUENTO20", "purchase_amount": 50.00 }
+    """
+    code = request.data.get('code')
+    amount = float(request.data.get('purchase_amount', 0))
+
+    if not code:
+        return Response({'valid': False, 'error': 'Código de cupón requerido'}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        coupon = Coupon.objects.get(code=code)
+
+        if not coupon.is_valid:
+            return Response({'valid': False, 'error': 'Cupón inactivo, expirado o agotado'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if coupon.discount_type == 'percent':
+            discount = amount * (float(coupon.discount) / 100.0)
+        else:
+            discount = float(coupon.discount)
+
+        discount = min(discount, amount)
+
+        return Response({
+            'valid': True,
+            'coupon_id': coupon.id,
+            'code': coupon.code,
+            'discount': discount,
+            'final_amount': amount - discount
+        }, status=status.HTTP_200_OK)
+
+    except Coupon.DoesNotExist:
+        return Response({'valid': False, 'error': 'Cupón no encontrado'}, status=status.HTTP_404_NOT_FOUND)
+
+
+@api_view(['POST'])
+@perm_decorator([IsAuthenticated])
+def create_payment(request):
+    """
+    POST /api/payments/create/
+    Body: { "client_id": 1, "amount": 5000, "offer_id": 2, "coupon_code": "PROMO10" }
+    """
+    client_id = request.data.get('client_id')
+    offer_id = request.data.get('offer_id')
+    coupon_code = request.data.get('coupon_code')
+    amount = float(request.data.get('amount', 0))
+
+    try:
+        client = Client.objects.get(id=client_id)
+        offer = Offer.objects.get(id=offer_id) if offer_id else None
+        coupon = Coupon.objects.get(code=coupon_code) if coupon_code else None
+
+        if coupon and coupon.is_valid:
+            if coupon.discount_type == 'percent':
+                discount = amount * (float(coupon.discount) / 100.0)
+            else:
+                discount = float(coupon.discount)
+            amount = max(0, amount - discount)
+
+        import uuid
+        token = f"flow_token_{uuid.uuid4().hex[:16]}"
+
+        payment = Payment.objects.create(
+            client=client,
+            offer=offer,
+            coupon=coupon,
+            amount=amount,
+            flow_token=token,
+            status='pending'
+        )
+
+        return Response({
+            'payment_id': payment.id,
+            'flow_token': token,
+            'amount': amount,
+            'redirect_url': f"https://sandbox.flow.cl/app/pay/{token}"
+        }, status=status.HTTP_201_CREATED)
+
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['POST'])
+@perm_decorator([AllowAny])
+def payment_webhook(request):
+    """
+    POST /api/payments/webhook/
+    Webhook para notificaciones de pago (Flow / Pasarelas)
+    """
+    token = request.data.get('token')
+    status_payment = request.data.get('status', '').lower()
+
+    if not token:
+        return Response({'error': 'Token no provisto'}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        payment = Payment.objects.get(flow_token=token)
+
+        if status_payment in ['paid', 'completed', 'success']:
+            payment.status = 'completed'
+            payment.save()
+
+            if payment.offer:
+                payment.offer.uses_count += 1
+                payment.offer.save()
+                OfferRedemption.objects.create(
+                    offer=payment.offer,
+                    client=payment.client,
+                    amount_spent=payment.amount,
+                    transaction_id=f"TXN_{payment.id}_{token[:8]}"
+                )
+
+            if payment.coupon:
+                payment.coupon.uses_count += 1
+                payment.coupon.save()
+                CouponRedemptModel.objects.create(
+                    coupon=payment.coupon,
+                    client=payment.client,
+                    amount=payment.amount,
+                    transaction_id=f"COUPON_TXN_{payment.id}_{token[:8]}"
+                )
+
+            return Response({'message': 'Pago completado y redenciones registradas'}, status=status.HTTP_200_OK)
+        else:
+            payment.status = 'failed'
+            payment.save()
+            return Response({'message': 'Estado de pago actualizado a fallido'}, status=status.HTTP_200_OK)
+
+    except Payment.DoesNotExist:
+        return Response({'error': 'Pago no encontrado'}, status=status.HTTP_404_NOT_FOUND)

@@ -153,3 +153,78 @@ class OfferView(models.Model):
     class Meta:
         db_table = 'offer_views'
         ordering = ['-viewed_at']
+
+
+class Coupon(models.Model):
+    """Cupones de descuento asignados a ofertas"""
+    code = models.CharField(max_length=50, unique=True)
+    offer = models.ForeignKey(Offer, on_delete=models.CASCADE, related_name='coupons')
+    
+    discount = models.DecimalField(max_digits=10, decimal_places=2)
+    discount_type = models.CharField(max_length=10, choices=[('percent', '%'), ('fixed', '$')], default='fixed')
+    max_uses = models.IntegerField(default=100)
+    uses_count = models.IntegerField(default=0)
+    
+    valid_from = models.DateTimeField(default=timezone.now)
+    valid_until = models.DateTimeField()
+    
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        db_table = 'coupons'
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return f"{self.code} - {self.offer.name}"
+
+    @property
+    def is_valid(self):
+        now = timezone.now()
+        return (self.is_active and 
+                self.valid_from <= now <= self.valid_until and
+                self.uses_count < self.max_uses)
+
+
+class CouponRedemption(models.Model):
+    """Redenciones de cupones por clientes"""
+    coupon = models.ForeignKey(Coupon, on_delete=models.CASCADE, related_name='redemptions')
+    client = models.ForeignKey('clients.Client', on_delete=models.CASCADE, related_name='coupon_redemptions')
+    
+    redeemed_at = models.DateTimeField(auto_now_add=True)
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    transaction_id = models.CharField(max_length=255, unique=True)
+
+    class Meta:
+        db_table = 'coupon_redemptions'
+        ordering = ['-redeemed_at']
+
+    def __str__(self):
+        return f"{self.client} - {self.coupon.code}"
+
+
+class Payment(models.Model):
+    """Registro de pagos (ej. Flow)"""
+    STATUS_CHOICES = [
+        ('pending', 'Pendiente'),
+        ('completed', 'Completado'),
+        ('failed', 'Fallido'),
+    ]
+
+    client = models.ForeignKey('clients.Client', on_delete=models.CASCADE, related_name='payments')
+    offer = models.ForeignKey(Offer, on_delete=models.SET_NULL, null=True, blank=True)
+    coupon = models.ForeignKey(Coupon, on_delete=models.SET_NULL, null=True, blank=True)
+
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    flow_token = models.CharField(max_length=255, unique=True, null=True, blank=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'payments'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Pago #{self.id} ({self.client}) - {self.status}"

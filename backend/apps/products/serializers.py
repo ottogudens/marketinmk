@@ -95,3 +95,26 @@ class OfferCreateSerializer(serializers.ModelSerializer):
             'min_visits', 'show_on_splash', 'send_whatsapp',
             'whatsapp_delay_minutes'
         ]
+
+
+class CouponSerializer(serializers.ModelSerializer):
+    offer_name = serializers.CharField(source='offer.name', read_only=True)
+    is_valid = serializers.BooleanField(read_only=True)
+
+    class Meta:
+        model = Coupon
+        fields = [
+            'id', 'code', 'offer', 'offer_name', 'discount', 'discount_type',
+            'max_uses', 'uses_count', 'valid_from', 'valid_until', 'is_active', 'is_valid'
+        ]
+
+
+class PaymentSerializer(serializers.ModelSerializer):
+    client_name = serializers.CharField(source='client.full_name', read_only=True)
+
+    class Meta:
+        model = Payment
+        fields = [
+            'id', 'client', 'client_name', 'offer', 'coupon', 'amount',
+            'flow_token', 'status', 'created_at', 'updated_at'
+        ]

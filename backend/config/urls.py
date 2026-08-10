@@ -8,7 +8,8 @@ from rest_framework.authtoken.views import obtain_auth_token
 from apps.clients.views import ClientViewSet, SessionViewSet, ClientInteractionViewSet
 from apps.products.views import (
     CategoryViewSet, ProductViewSet, OfferViewSet,
-    OfferRedemptionViewSet, OfferViewViewSet
+    OfferRedemptionViewSet, OfferViewViewSet, CouponViewSet,
+    validate_coupon, create_payment, payment_webhook
 )
 from apps.analytics.views import AnalyticsViewSet
 
@@ -24,6 +25,7 @@ router.register(r'interactions', ClientInteractionViewSet, basename='interaction
 router.register(r'categories', CategoryViewSet, basename='category')
 router.register(r'products', ProductViewSet, basename='product')
 router.register(r'offers', OfferViewSet, basename='offer')
+router.register(r'coupons', CouponViewSet, basename='coupon')
 router.register(r'redemptions', OfferRedemptionViewSet, basename='redemption')
 router.register(r'offer-views', OfferViewViewSet, basename='offer-view')
 
@@ -43,6 +45,9 @@ urlpatterns = [
     path('api/auth/callback/<str:provider>/', oauth_callback, name='oauth_callback'),
     path('api/auth/logout/', logout_user, name='logout'),
     path('api/auth/me/', get_current_user, name='current_user'),
+    path('api/coupons/validate/', validate_coupon, name='validate_coupon'),
+    path('api/payments/create/', create_payment, name='create_payment'),
+    path('api/payments/webhook/', payment_webhook, name='payment_webhook'),
     
     # OAuth Social Auth
     path('auth/', include('social_django.urls', namespace='social')),

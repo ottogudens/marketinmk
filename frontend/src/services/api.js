@@ -88,4 +88,15 @@ export const oauthService = {
   exchangeCode: (provider, code) => api.post('/auth/exchange-code/', { provider, code }),
 };
 
+// ============ Cupones ============
+export const couponService = {
+  validate: (code, purchaseAmount) => api.post('/coupons/validate/', { code, purchase_amount: purchaseAmount }),
+  list: () => api.get('/coupons/'),
+};
+
+// ============ Pagos ============
+export const paymentService = {
+  create: (data) => api.post('/payments/create/', data),
+};
+
 export default api;

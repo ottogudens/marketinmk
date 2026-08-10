@@ -8,10 +8,5 @@ cmds = [
   "/app/.venv/bin/pip install -r backend/requirements.txt"
 ]
 
-[phases.build]
-cmds = [
-  "cd backend && /app/.venv/bin/python manage.py collectstatic --noinput"
-]
-
 [start]
-cmd = "cd backend && /app/.venv/bin/gunicorn config.wsgi --workers 4 --bind 0.0.0.0:$PORT --timeout 120"
+cmd = "cd backend && /app/.venv/bin/python manage.py migrate --noinput && /app/.venv/bin/python manage.py collectstatic --noinput && /app/.venv/bin/python manage.py create_superadmin && /app/.venv/bin/gunicorn config.wsgi --workers 4 --bind 0.0.0.0:$PORT --timeout 120"

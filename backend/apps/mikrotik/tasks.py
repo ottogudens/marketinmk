@@ -23,11 +23,12 @@ def sync_mikrotik_users():
     total_processed = 0
 
     for device in devices:
+        target_host = device.wireguard_ip if (device.use_wireguard and device.wireguard_ip) else device.host
         try:
             api = connect(
                 username=device.username,
                 password=device.password,
-                host=device.host,
+                host=target_host,
                 port=device.port,
                 timeout=10
             )

@@ -343,3 +343,238 @@
   .charts-grid, .tables-grid { grid-template-columns: 1fr; }
   .admin-header, .kpi-grid, .charts-grid, .tables-grid, .admin-tabs { padding-inline: 1rem; }
 }
+
+/* MikroTik & Wireguard View */
+.mikrotik-view {
+  padding: 1.5rem 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.wg-server-card {
+  background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
+  border: 1px solid #4338ca;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 20px rgba(49, 46, 129, 0.4);
+}
+
+.wg-server-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1.25rem;
+}
+
+.wg-server-header h2 {
+  font-size: 1.2rem;
+  margin: 0 0 0.2rem;
+  color: #f3e8ff;
+}
+
+.wg-sub {
+  font-size: 0.82rem;
+  color: #c7d2fe;
+  margin: 0;
+}
+
+.wg-status-badge {
+  background: #10b981;
+  color: #064e3b;
+  font-weight: 700;
+  font-size: 0.78rem;
+  padding: 0.3rem 0.8rem;
+  border-radius: 20px;
+}
+
+.wg-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.wg-metric {
+  background: rgba(255, 255, 255, 0.07);
+  padding: 0.8rem 1rem;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.wg-metric-label { font-size: 0.75rem; color: #a5b4fc; text-transform: uppercase; }
+.wg-metric-val { font-size: 1.1rem; font-weight: 700; color: #ffffff; }
+
+.device-action-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.device-action-bar h3 {
+  font-size: 1rem;
+  color: #f1f5f9;
+  margin: 0;
+}
+
+.btn-add-device {
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 0.6rem 1.2rem;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.routers-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1rem;
+}
+
+.router-card {
+  background: #0f172a;
+  border: 1px solid #1e293b;
+  border-radius: 12px;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.router-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.8rem;
+}
+
+.router-card-header h4 { font-size: 1rem; margin: 0; color: #f8fafc; }
+
+.status-pill {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0.2rem 0.6rem;
+  border-radius: 12px;
+}
+
+.status-pill.online { background: #064e3b; color: #34d399; }
+.status-pill.offline { background: #451a03; color: #fbbf24; }
+
+.router-card-body p {
+  font-size: 0.82rem;
+  color: #94a3b8;
+  margin: 0.25rem 0;
+}
+
+.router-card-actions { margin-top: 1rem; }
+
+.btn-script {
+  width: 100%;
+  background: #1e293b;
+  color: #38bdf8;
+  border: 1px solid #0284c7;
+  border-radius: 8px;
+  padding: 0.5rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-script:hover { background: #0284c720; }
+
+.no-routers-card {
+  grid-column: 1 / -1;
+  background: #0f172a;
+  border: 1px dashed #334155;
+  border-radius: 12px;
+  padding: 3rem;
+  text-align: center;
+  color: #64748b;
+}
+
+/* Modal Box */
+.script-modal {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+}
+
+.script-modal-content {
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 12px;
+  padding: 1.5rem;
+  max-width: 600px;
+  width: 100%;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  color: #e2e8f0;
+}
+
+.script-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.script-modal-header h3 { margin: 0; font-size: 1.1rem; color: #f8fafc; }
+
+.close-btn {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  font-size: 1.2rem;
+  cursor: pointer;
+}
+
+.script-code {
+  background: #020617;
+  border: 1px solid #1e293b;
+  border-radius: 8px;
+  padding: 1rem;
+  color: #38bdf8;
+  font-size: 0.78rem;
+  max-height: 250px;
+  overflow-y: auto;
+  font-family: monospace;
+}
+
+.btn-copy {
+  width: 100%;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 0.6rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 1rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-bottom: 1rem;
+}
+
+.form-group label { font-size: 0.8rem; color: #94a3b8; }
+
+.form-group input {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 6px;
+  padding: 0.5rem;
+  color: white;
+}

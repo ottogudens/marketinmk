@@ -12,6 +12,8 @@ from apps.products.views import (
     validate_coupon, create_payment, payment_webhook
 )
 from apps.analytics.views import AnalyticsViewSet
+from apps.mikrotik.views import MikroTikDeviceViewSet
+from apps.mikrotik.wireguard_views import get_wireguard_server_status, generate_mikrotik_script
 
 # REST Framework Router
 router = DefaultRouter()
@@ -30,8 +32,9 @@ router.register(r'coupons', CouponViewSet, basename='coupon')
 router.register(r'redemptions', OfferRedemptionViewSet, basename='redemption')
 router.register(r'offer-views', OfferViewViewSet, basename='offer-view')
 
-# Analytics
+# Analytics y MikroTik
 router.register(r'analytics', AnalyticsViewSet, basename='analytics')
+router.register(r'mikrotik/devices', MikroTikDeviceViewSet, basename='mikrotik-device')
 
 from apps.clients.oauth_views import oauth_callback, logout_user, get_current_user
 
@@ -50,6 +53,8 @@ urlpatterns = [
     path('api/payments/create/', create_payment, name='create_payment'),
     path('api/payments/webhook/', payment_webhook, name='payment_webhook'),
     path('api/pos/webhook/', pos_webhook, name='pos_webhook'),
+    path('api/mikrotik/wireguard/server_status/', get_wireguard_server_status, name='wireguard_server_status'),
+    path('api/mikrotik/wireguard/generate_script/<int:device_id>/', generate_mikrotik_script, name='generate_mikrotik_script'),
     
     # OAuth Social Auth
     path('auth/', include('social_django.urls', namespace='social')),

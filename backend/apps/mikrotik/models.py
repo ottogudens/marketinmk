@@ -4,11 +4,17 @@ from django.utils import timezone
 class MikroTikDevice(models.Model):
     """Dispositivo MikroTik configurado"""
     name = models.CharField(max_length=255)
-    host = models.GenericIPAddressField()
+    host = models.GenericIPAddressField(help_text="IP pública o IP VPN Wireguard del Router")
     port = models.IntegerField(default=8728)
     username = models.CharField(max_length=255)
     password = models.CharField(max_length=255)
     
+    # Wireguard VPN Tunneling Configuration
+    use_wireguard = models.BooleanField(default=True, help_text="Conectar a través del túnel VPN Wireguard")
+    wireguard_ip = models.GenericIPAddressField(null=True, blank=True, help_text="IP asignada al router en la red Wireguard (ej: 10.8.0.2)")
+    wireguard_public_key = models.CharField(max_length=255, blank=True, null=True, help_text="Clave pública Wireguard del RouterOS")
+    wireguard_preshared_key = models.CharField(max_length=255, blank=True, null=True)
+
     # Configuración de hotspot
     hotspot_name = models.CharField(max_length=255, null=True, blank=True)
     
@@ -24,7 +30,7 @@ class MikroTikDevice(models.Model):
         db_table = 'mikrotik_devices'
     
     def __str__(self):
-        return self.name
+        return f"{self.name} ({self.wireguard_ip or self.host})"
 
 
 class MikroTikUser(models.Model):

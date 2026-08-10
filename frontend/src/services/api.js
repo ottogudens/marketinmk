@@ -106,4 +106,14 @@ export const loyaltyService = {
   getMyStatus: () => api.get('/loyalty/my_status/'),
 };
 
+// ============ MikroTik & Wireguard ============
+export const mikrotikService = {
+  listDevices: () => api.get('/mikrotik/devices/'),
+  createDevice: (data) => api.post('/mikrotik/devices/', data),
+  updateDevice: (id, data) => api.patch(`/mikrotik/devices/${id}/`, data),
+  deleteDevice: (id) => api.delete(`/mikrotik/devices/${id}/`),
+  getWireguardStatus: () => api.get('/mikrotik/wireguard/server_status/'),
+  generateScript: (deviceId, data) => api.post(`/mikrotik/wireguard/generate_script/${deviceId}/`, data),
+};
+
 export default api;

@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { AuthProvider } from './context/AuthContext';
 import SplashPage from './pages/SplashPage';
 import UserDashboard from './pages/UserDashboard';
+import AdminDashboard from './pages/AdminDashboard';
 import './styles/index.css';
 
 const ProtectedRoute = ({ element }) => {
@@ -20,7 +21,11 @@ function App() {
             path="/dashboard"
             element={<ProtectedRoute element={<UserDashboard />} />}
           />
-          {/* OAuth Callback Routes (to be implemented) */}
+          <Route
+            path="/admin/dashboard"
+            element={<ProtectedRoute element={<AdminDashboard />} />}
+          />
+          {/* OAuth Callback Routes */}
           {/* <Route path="/callback/facebook" element={<OAuthCallback />} />
           <Route path="/callback/instagram" element={<OAuthCallback />} /> */}
         </Routes>

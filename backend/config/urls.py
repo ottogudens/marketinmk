@@ -10,6 +10,7 @@ from apps.products.views import (
     CategoryViewSet, ProductViewSet, OfferViewSet,
     OfferRedemptionViewSet, OfferViewViewSet
 )
+from apps.analytics.views import AnalyticsViewSet
 
 # REST Framework Router
 router = DefaultRouter()
@@ -25,6 +26,9 @@ router.register(r'products', ProductViewSet, basename='product')
 router.register(r'offers', OfferViewSet, basename='offer')
 router.register(r'redemptions', OfferRedemptionViewSet, basename='redemption')
 router.register(r'offer-views', OfferViewViewSet, basename='offer-view')
+
+# Analytics
+router.register(r'analytics', AnalyticsViewSet, basename='analytics')
 
 urlpatterns = [
     # Admin

@@ -78,8 +78,8 @@ class AnalyticsViewSet(viewsets.ViewSet):
             Offer.objects.filter(status='active').annotate(
                 views_count=Count('views', distinct=True),
                 clicks_count=Count(
-                    'clientinteraction',
-                    filter=Q(clientinteraction__interaction_type='click'),
+                    'views',
+                    filter=Q(views__clicked=True),
                     distinct=True
                 )
             ).order_by('-views_count').values(

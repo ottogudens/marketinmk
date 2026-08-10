@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Category, Product, Offer, OfferRedemption, OfferView
+from .models import Category, Product, Offer, OfferRedemption, OfferView, Coupon, Payment
 
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:

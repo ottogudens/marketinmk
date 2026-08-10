@@ -187,3 +187,65 @@
     font-size: 1.4rem;
   }
 }
+
+/* AI Recommendations Section */
+.ai-recommendations-section {
+  max-width: 1200px;
+  margin: 0 auto 30px;
+  background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
+  border-radius: var(--border-radius);
+  padding: 24px;
+  box-shadow: 0 4px 16px rgba(49, 46, 129, 0.3);
+  color: white;
+}
+
+.ai-badge {
+  display: inline-block;
+  background: linear-gradient(135deg, #818cf8, #c084fc);
+  color: #1e1b4b;
+  font-weight: 700;
+  font-size: 0.85rem;
+  padding: 6px 14px;
+  border-radius: 20px;
+  margin-bottom: 16px;
+}
+
+.ai-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.ai-card {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.ai-card h3 {
+  font-size: 1.2rem;
+  margin: 0 0 10px 0;
+  color: #f3e8ff;
+}
+
+.ai-reasoning {
+  font-size: 0.9rem;
+  color: #c7d2fe;
+  line-height: 1.4;
+  margin-bottom: 16px;
+}
+
+.ai-discount-badge {
+  align-self: flex-start;
+  background: #f43f5e;
+  color: white;
+  font-weight: 700;
+  font-size: 0.8rem;
+  padding: 4px 10px;
+  border-radius: 6px;
+}

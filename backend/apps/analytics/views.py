@@ -180,3 +180,53 @@ class AnalyticsViewSet(viewsets.ViewSet):
         date_str = request.data.get('date')
         result = aggregate_daily_stats.delay(date_str)
         return Response({'task_id': result.id, 'status': 'queued'})
+
+    @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
+    def my_ai_suggestions(self, request):
+        """
+        GET /api/analytics/my_ai_suggestions/
+        Devuelve las sugerencias de IA para el cliente autenticado.
+        """
+        from .models import AISuggestion
+        from .tasks import generate_personalized_offers
+
+        try:
+            client = request.user.client
+        except Exception:
+            return Response({'error': 'Usuario no asociado a un cliente'}, status=400)
+
+        suggestions = AISuggestion.objects.filter(client=client, is_dismissed=False)[:3]
+
+        if not suggestions.exists():
+            # Disparar generación asíncrona o síncrona inmediata si no hay
+            generate_personalized_offers(client.id)
+            suggestions = AISuggestion.objects.filter(client=client, is_dismissed=False)[:3]
+
+        data = [{
+            'id': s.id,
+            'title': s.title,
+            'reasoning': s.reasoning,
+            'suggested_discount_percent': s.suggested_discount_percent,
+            'offer_id': s.suggested_offer.id if s.suggested_offer else None,
+            'offer_name': s.suggested_offer.name if s.suggested_offer else None,
+            'created_at': s.created_at
+        } for s in suggestions]
+
+        return Response(data)
+
+    @action(detail=False, methods=['post'], permission_classes=[IsAuthenticated])
+    def generate_ai_suggestion(self, request):
+        """
+        POST /api/analytics/generate_ai_suggestion/
+        Solicita la generación de sugerencias IA para un cliente.
+        """
+        from .tasks import generate_personalized_offers
+        client_id = request.data.get('client_id')
+        if not client_id and hasattr(request.user, 'client'):
+            client_id = request.user.client.id
+
+        if not client_id:
+            return Response({'error': 'client_id es requerido'}, status=400)
+
+        task = generate_personalized_offers.delay(client_id)
+        return Response({'message': 'Generación de oferta IA iniciada', 'task_id': task.id})

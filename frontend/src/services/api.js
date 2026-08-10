@@ -71,6 +71,8 @@ export const analyticsService = {
   getDailyStats: (days = 30) => api.get('/analytics/daily_stats/', { params: { days } }),
   getClientsByPlatform: () => api.get('/analytics/clients_by_platform/'),
   triggerAggregation: (date) => api.post('/analytics/trigger_aggregation/', { date }),
+  getMyAISuggestions: () => api.get('/analytics/my_ai_suggestions/'),
+  requestAISuggestion: (clientId) => api.post('/analytics/generate_ai_suggestion/', { client_id: clientId }),
 };
 
 // ============ OAuth ============

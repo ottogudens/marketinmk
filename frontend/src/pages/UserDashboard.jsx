@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { offerService, interactionService, clientService } from '../services/api';
+import { offerService, interactionService, clientService, analyticsService } from '../services/api';
 import OfferCard from '../components/OfferCard';
 import '../styles/dashboard.css';
 
@@ -10,6 +10,7 @@ const UserDashboard = () => {
   const { client, currentSession, logout } = useAuth();
   const [offers, setOffers] = useState([]);
   const [statistics, setStatistics] = useState(null);
+  const [aiSuggestions, setAiSuggestions] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -21,7 +22,17 @@ const UserDashboard = () => {
 
     loadOffers();
     loadStatistics();
+    loadAISuggestions();
   }, [client]);
+
+  const loadAISuggestions = async () => {
+    try {
+      const response = await analyticsService.getMyAISuggestions();
+      setAiSuggestions(response.data);
+    } catch (err) {
+      console.error('Error loading AI suggestions:', err);
+    }
+  };
 
   const loadOffers = async () => {
     try {
@@ -109,6 +120,22 @@ const UserDashboard = () => {
           <div className="stat-card">
             <h4>Datos usados</h4>
             <p className="stat-value">{statistics.total_data_gb} GB</p>
+          </div>
+        </section>
+      )}
+
+      {/* AI Recommendation Agent Section */}
+      {aiSuggestions.length > 0 && (
+        <section className="ai-recommendations-section">
+          <div className="ai-badge">🤖 Recomendación IA Personalizada</div>
+          <div className="ai-cards-grid">
+            {aiSuggestions.map((sug) => (
+              <div key={sug.id} className="ai-card">
+                <h3>{sug.title}</h3>
+                <p className="ai-reasoning">💡 {sug.reasoning}</p>
+                <div className="ai-discount-badge">{sug.suggested_discount_percent}% DCTO EXTRA</div>
+              </div>
+            ))}
           </div>
         </section>
       )}

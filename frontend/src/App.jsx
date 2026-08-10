@@ -23,6 +23,10 @@ function App() {
             element={<ProtectedRoute element={<UserDashboard />} />}
           />
           <Route
+            path="/admin"
+            element={<Navigate to="/admin/dashboard" replace />}
+          />
+          <Route
             path="/admin/dashboard"
             element={<ProtectedRoute element={<AdminDashboard />} />}
           />

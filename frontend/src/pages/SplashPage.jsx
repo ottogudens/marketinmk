@@ -90,6 +90,45 @@ const SplashPage = () => {
         </div>
 
         {isLoading && <div className="loading">Cargando...</div>}
+
+        {/* Demo / Admin Quick Login Link */}
+        <div style={{ marginTop: '20px', textAlign: 'center' }}>
+          <button
+            style={{
+              background: 'rgba(255,255,255,0.08)',
+              border: '1px solid rgba(255,255,255,0.2)',
+              color: '#94a3b8',
+              fontSize: '0.8rem',
+              padding: '6px 14px',
+              borderRadius: '20px',
+              cursor: 'pointer'
+            }}
+            onClick={() => {
+              const username = prompt('Usuario Administrador:', 'admin');
+              const password = prompt('Contraseña Administrador:', 'Admin1234!');
+              if (username && password) {
+                // Autenticar contra token API de Django
+                fetch(`${import.meta.env.VITE_API_URL || '/api'}/token-auth/`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ username, password })
+                })
+                .then(res => res.json())
+                .then(data => {
+                  if (data.token) {
+                    localStorage.setItem('authToken', data.token);
+                    navigate('/admin/dashboard');
+                  } else {
+                    alert('Credenciales incorrectas');
+                  }
+                })
+                .catch(() => alert('Error de conexión al servidor de autenticación'));
+              }
+            }}
+          >
+            🔐 Acceso Administrador (Panel Control)
+          </button>
+        </div>
       </main>
 
       {/* Footer con info */}

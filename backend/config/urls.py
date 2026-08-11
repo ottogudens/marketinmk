@@ -12,7 +12,7 @@ from apps.products.views import (
     validate_coupon, create_payment, payment_webhook
 )
 from apps.analytics.views import AnalyticsViewSet
-from apps.mikrotik.views import MikroTikDeviceViewSet
+from apps.mikrotik.views import MikroTikDeviceViewSet, push_sessions
 from apps.mikrotik.wireguard_views import get_wireguard_server_status, generate_mikrotik_script
 
 # REST Framework Router
@@ -53,6 +53,7 @@ urlpatterns = [
     path('api/payments/create/', create_payment, name='create_payment'),
     path('api/payments/webhook/', payment_webhook, name='payment_webhook'),
     path('api/pos/webhook/', pos_webhook, name='pos_webhook'),
+    path('api/mikrotik/push_sessions/', push_sessions, name='mikrotik_push_sessions'),
     path('api/mikrotik/wireguard/server_status/', get_wireguard_server_status, name='wireguard_server_status'),
     path('api/mikrotik/wireguard/generate_script/<int:device_id>/', generate_mikrotik_script, name='generate_mikrotik_script'),
     

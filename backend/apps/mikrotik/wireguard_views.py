@@ -74,7 +74,8 @@ def generate_mikrotik_script(request, device_id):
     server_port = getattr(settings, 'WIREGUARD_SERVER_PORT', 51820)
     server_pubkey = getattr(settings, 'WIREGUARD_SERVER_PUBLIC_KEY', 'SERVER_PUBLIC_KEY_PLACEHOLDER=')
 
-    wg_ip = device.wireguard_ip or request.data.get('assigned_ip', f"10.8.0.{device.id + 1}")
+    default_ip = device.host if (device.host and device.host.startswith('10.8.')) else f"10.8.0.{device.id + 1}"
+    wg_ip = device.wireguard_ip or request.data.get('assigned_ip', default_ip)
     if not device.wireguard_ip:
         device.wireguard_ip = wg_ip
         device.save()
@@ -87,20 +88,11 @@ def generate_mikrotik_script(request, device_id):
 # IP VPN Asignada: {wg_ip}/32
 # =========================================================
 
-/interface wireguard
-add listen-port=51820 name=wg-marketinmk comment="VPN MarketinMK Cloud"
-
-/interface wireguard peers
-add interface=wg-marketinmk endpoint-address="{server_endpoint}" endpoint-port={server_port} public-key="{server_pubkey}" allowed-address=10.8.0.0/24 persistent-keepalive=25s comment="Central Server"
-
-/ip address
-add address={wg_ip}/24 interface=wg-marketinmk comment="IP VPN MarketinMK"
-
-/ip service
-set api port={device.port} disabled=no address=10.8.0.0/24
-
-/system script
-add name=marketinmk_keepalive owner=admin source=":ping 10.8.0.1 count=3"
+:do {{ /interface wireguard add listen-port=51820 name=wg-marketinmk comment="VPN MarketinMK Cloud" }} on-error={{}}
+:do {{ /interface wireguard peers add interface=wg-marketinmk endpoint-address="{server_endpoint}" endpoint-port={server_port} public-key="{server_pubkey}" allowed-address=10.8.0.0/24 persistent-keepalive=25s comment="Central Server" }} on-error={{}}
+:do {{ /ip address add address={wg_ip}/24 interface=wg-marketinmk comment="IP VPN MarketinMK" }} on-error={{}}
+/ip service set api port={device.port} disabled=no address=10.8.0.0/24
+:do {{ /system script add name=marketinmk_keepalive owner=admin source=":ping 10.8.0.1 count=3" }} on-error={{}}
 
 :put "========================================================="
 :put "✅ Configuración Wireguard para {device.name} completada!"

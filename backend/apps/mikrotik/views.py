@@ -11,6 +11,13 @@ class MikroTikDeviceSerializer(serializers.ModelSerializer):
             'password': {'write_only': True}
         }
 
+    def create(self, validated_data):
+        if validated_data.get('use_wireguard') and not validated_data.get('wireguard_ip'):
+            host = validated_data.get('host', '')
+            if host.startswith('10.8.'):
+                validated_data['wireguard_ip'] = host
+        return super().create(validated_data)
+
 
 class MikroTikDeviceViewSet(viewsets.ModelViewSet):
     """ViewSet para la gestión de dispositivos RouterOS"""

@@ -113,6 +113,19 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleUpdatePubKey = async (deviceId, currentKey) => {
+    const key = prompt('Ingresa la Clave Pública Wireguard (public-key) enviada por tu RouterOS:', currentKey || '');
+    if (key !== null) {
+      try {
+        await mikrotikService.updateDevice(deviceId, { wireguard_public_key: key.trim() });
+        alert('Clave pública de Wireguard registrada correctamente.');
+        loadData();
+      } catch (err) {
+        alert('Error al guardar la clave pública.');
+      }
+    }
+  };
+
   if (loading) return (
     <div className="admin-loading">
       <div className="spinner" />
@@ -308,11 +321,15 @@ export default function AdminDashboard() {
                     <p><strong>IP VPN:</strong> {dev.wireguard_ip || '10.8.0.X'}</p>
                     <p><strong>IP Host:</strong> {dev.host}</p>
                     <p><strong>Puerto API:</strong> {dev.port}</p>
+                    <p><strong>Clave Pública WG:</strong> <code style={{ fontSize: '11px', color: '#60a5fa' }}>{dev.wireguard_public_key || 'Sin registrar'}</code></p>
                     <p><strong>Wireguard:</strong> {dev.use_wireguard ? '✅ Habilitado (Sin IP pública)' : '❌ Deshabilitado'}</p>
                   </div>
                   <div className="router-card-actions">
                     <button className="btn-script" onClick={() => handleGetScript(dev.id)}>
-                      📜 Obtener Script RouterOS
+                      📜 Script RouterOS
+                    </button>
+                    <button className="btn-script" style={{ background: '#2563eb' }} onClick={() => handleUpdatePubKey(dev.id, dev.wireguard_public_key)}>
+                      🔑 Clave Pública
                     </button>
                   </div>
                 </div>

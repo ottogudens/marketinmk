@@ -29,6 +29,55 @@ class ClientViewSet(viewsets.ModelViewSet):
         return ClientSerializer
     
     @action(detail=False, methods=['post'], permission_classes=[AllowAny])
+    def login_with_password(self, request):
+        """
+        POST /api/clients/login_with_password/
+        Autenticación de cliente con email/usuario y contraseña
+        """
+        from django.contrib.auth import authenticate
+        from rest_framework.authtoken.models import Token
+        from django.contrib.auth.models import User
+
+        username = request.data.get('username') or request.data.get('email')
+        password = request.data.get('password')
+
+        if not username or not password:
+            return Response({'error': 'Email/Usuario y contraseña requeridos'}, status=status.HTTP_400_BAD_REQUEST)
+
+        user = authenticate(username=username, password=password)
+        if not user:
+            u = User.objects.filter(Q(email=username) | Q(username=username)).first()
+            if u:
+                user = authenticate(username=u.username, password=password)
+
+        if not user:
+            # Si el usuario no existe, crearlo como cliente registrado
+            user = User.objects.create_user(username=username, email=username, password=password)
+
+        token, _ = Token.objects.get_or_create(user=user)
+        client = getattr(user, 'client', None)
+
+        if not client:
+            client = Client.objects.create(
+                user=user,
+                full_name=user.username.split('@')[0],
+                email=user.email if '@' in user.email else f"{user.username}@hotspot.local",
+                social_platform='email',
+                social_id=f"user_{user.id}",
+                status='active'
+            )
+
+        mac_address = request.data.get('mac_address', '')
+        ip_address = request.META.get('REMOTE_ADDR', '')
+        if mac_address:
+            Session.objects.create(client=client, mac_address=mac_address, ip_address=ip_address)
+
+        return Response({
+            'token': token.key,
+            'client': ClientSerializer(client).data
+        })
+
+    @action(detail=False, methods=['post'], permission_classes=[AllowAny])
     def register_from_oauth(self, request):
         """
         Registrar cliente desde OAuth

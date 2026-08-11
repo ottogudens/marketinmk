@@ -28,6 +28,7 @@ api.interceptors.response.use(
 // ============ Clientes ============
 export const clientService = {
   registerFromOAuth: (data) => api.post('/clients/register_from_oauth/', data),
+  loginWithPassword: (data) => api.post('/clients/login_with_password/', data),
   getCurrent: () => api.get('/clients/me/'),
   get: (id) => api.get(`/clients/${id}/`),
   create: (data) => api.post('/clients/', data),

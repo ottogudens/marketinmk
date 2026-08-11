@@ -30,14 +30,17 @@ export const clientService = {
   registerFromOAuth: (data) => api.post('/clients/register_from_oauth/', data),
   getCurrent: () => api.get('/clients/me/'),
   get: (id) => api.get(`/clients/${id}/`),
-  getStatistics: (clientId) => api.get(`/clients/${clientId}/statistics/`),
+  create: (data) => api.post('/clients/', data),
   update: (id, data) => api.patch(`/clients/${id}/`, data),
+  delete: (id) => api.delete(`/clients/${id}/`),
+  getStatistics: (clientId) => api.get(`/clients/${clientId}/statistics/`),
   getSessions: (clientId) => api.get(`/clients/${clientId}/sessions/`),
   list: (params) => api.get('/clients/', { params }),
 };
 
 // ============ Sesiones ============
 export const sessionService = {
+  list: () => api.get('/sessions/'),
   create: (data) => api.post('/sessions/create_session/', data),
   disconnect: (sessionId, data) => api.post(`/sessions/${sessionId}/disconnect/`, data),
   get: (id) => api.get(`/sessions/${id}/`),
@@ -59,6 +62,9 @@ export const productService = {
 export const offerService = {
   list: () => api.get('/offers/'),
   get: (id) => api.get(`/offers/${id}/`),
+  create: (data) => api.post('/offers/', data),
+  update: (id, data) => api.patch(`/offers/${id}/`, data),
+  delete: (id) => api.delete(`/offers/${id}/`),
   getForClient: (clientId) => api.get('/offers/for_client/', { params: { client_id: clientId } }),
   trackView: (offerId, data) => api.post(`/offers/${offerId}/track_view/`, data),
   trackClick: (offerId, data) => api.post(`/offers/${offerId}/track_click/`, data),

@@ -3,7 +3,7 @@ import {
   BarChart, Bar, LineChart, Line, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
 } from 'recharts';
-import { analyticsService, mikrotikService } from '../services/api';
+import { analyticsService, mikrotikService, clientService, offerService, sessionService } from '../services/api';
 import './AdminDashboard.css';
 
 // ─── KPI Card ────────────────────────────────────────────────────────────────
@@ -52,6 +52,24 @@ export default function AdminDashboard() {
   const [selectedDays, setSelectedDays] = useState(30);
   const [activeTab, setActiveTab] = useState('overview');
 
+  // Management States
+  const [clientsList, setClientsList] = useState([]);
+  const [offersList, setOffersList] = useState([]);
+  const [sessionsList, setSessionsList] = useState([]);
+
+  // Modals
+  const [showAddClientModal, setShowAddClientModal] = useState(false);
+  const [newClient, setNewClient] = useState({ full_name: '', email: '', phone: '', social_platform: 'whatsapp', mac_address: '' });
+
+  const [showAddOfferModal, setShowAddOfferModal] = useState(false);
+  const [newOffer, setNewOffer] = useState({
+    name: '', description: '', offer_type: 'discount', discount_value: 10, discount_type: 'percent',
+    banner_image: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5',
+    start_date: new Date().toISOString().slice(0, 16),
+    end_date: new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 16),
+    status: 'active'
+  });
+
   // MikroTik & Wireguard States
   const [mikrotikDevices, setMikrotikDevices] = useState([]);
   const [wireguardStatus, setWireguardStatus] = useState(null);
@@ -65,23 +83,32 @@ export default function AdminDashboard() {
     setLoading(true);
     setError(null);
     try {
-      const [ovRes, dailyRes, platRes, mkDevicesRes, wgStatusRes] = await Promise.all([
+      const [ovRes, dailyRes, platRes, mkDevicesRes, wgStatusRes, clientsRes, offersRes, sessionsRes] = await Promise.all([
         analyticsService.getOverview(),
         analyticsService.getDailyStats(selectedDays),
         analyticsService.getClientsByPlatform(),
         mikrotikService.listDevices().catch(() => ({ data: [] })),
         mikrotikService.getWireguardStatus().catch(() => ({ data: null })),
+        clientService.list().catch(() => ({ data: [] })),
+        offerService.list().catch(() => ({ data: [] })),
+        sessionService.list().catch(() => ({ data: [] })),
       ]);
       setOverview(ovRes.data);
       setDailyStats(Array.isArray(dailyRes.data) ? dailyRes.data : (dailyRes.data?.results || []));
       setPlatformData(Array.isArray(platRes.data) ? platRes.data : (platRes.data?.results || []));
       
       const devicesData = mkDevicesRes.data;
-      const devicesList = Array.isArray(devicesData)
-        ? devicesData
-        : (Array.isArray(devicesData?.results) ? devicesData.results : []);
-      setMikrotikDevices(devicesList);
+      setMikrotikDevices(Array.isArray(devicesData) ? devicesData : (devicesData?.results || []));
       setWireguardStatus(wgStatusRes.data);
+
+      const cData = clientsRes.data;
+      setClientsList(Array.isArray(cData) ? cData : (cData?.results || []));
+
+      const oData = offersRes.data;
+      setOffersList(Array.isArray(oData) ? oData : (oData?.results || []));
+
+      const sData = sessionsRes.data;
+      setSessionsList(Array.isArray(sData) ? sData : (sData?.results || []));
     } catch (err) {
       setError('Error al cargar datos. Verifica que tienes permisos de admin.');
     } finally {
@@ -137,6 +164,54 @@ export default function AdminDashboard() {
         loadData();
       } catch (err) {
         alert('Error al eliminar el dispositivo.');
+      }
+    }
+  };
+
+  const handleCreateClient = async (e) => {
+    e.preventDefault();
+    try {
+      await clientService.create({
+        ...newClient,
+        social_id: newClient.social_id || `manual_${Date.now()}`
+      });
+      setShowAddClientModal(false);
+      setNewClient({ full_name: '', email: '', phone: '', social_platform: 'whatsapp', mac_address: '' });
+      loadData();
+    } catch (err) {
+      alert('Error al crear el cliente. Revisa que el email o MAC no estén duplicados.');
+    }
+  };
+
+  const handleDeleteClient = async (clientId, name) => {
+    if (window.confirm(`¿Deseas eliminar al cliente "${name}"?`)) {
+      try {
+        await clientService.delete(clientId);
+        loadData();
+      } catch (err) {
+        alert('Error al eliminar cliente.');
+      }
+    }
+  };
+
+  const handleCreateOffer = async (e) => {
+    e.preventDefault();
+    try {
+      await offerService.create(newOffer);
+      setShowAddOfferModal(false);
+      loadData();
+    } catch (err) {
+      alert('Error al crear la oferta.');
+    }
+  };
+
+  const handleDeleteOffer = async (offerId, name) => {
+    if (window.confirm(`¿Deseas eliminar la oferta "${name}"?`)) {
+      try {
+        await offerService.delete(offerId);
+        loadData();
+      } catch (err) {
+        alert('Error al eliminar la oferta.');
       }
     }
   };
@@ -598,6 +673,222 @@ export default function AdminDashboard() {
             </div>
           </section>
         </>
+      )}
+
+      {/* TAB: CLIENTES */}
+      {activeTab === 'clients' && (
+        <div className="tab-view-container">
+          <div className="device-action-bar">
+            <h2>👥 Clientes Registrados</h2>
+            <button className="btn-add-device" onClick={() => setShowAddClientModal(true)}>
+              + Agregar Cliente
+            </button>
+          </div>
+
+          <div className="table-card">
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Cliente</th>
+                  <th>MAC Address</th>
+                  <th>Red Social</th>
+                  <th>Teléfono</th>
+                  <th>Visitas</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                {clientsList.length === 0 ? (
+                  <tr><td colSpan={7} className="empty-row">No hay clientes registrados aún</td></tr>
+                ) : clientsList.map((c, i) => (
+                  <tr key={c.id}>
+                    <td><span className="rank">{i + 1}</span></td>
+                    <td>
+                      <div className="client-name">{c.full_name}</div>
+                      <div className="client-email">{c.email}</div>
+                    </td>
+                    <td><code style={{ fontSize: '11px', color: '#94a3b8' }}>{c.mac_address || '-'}</code></td>
+                    <td><span className="platform-badge" data-platform={c.social_platform}>{c.social_platform}</span></td>
+                    <td>{c.phone || '-'}</td>
+                    <td>{c.total_visits}</td>
+                    <td>
+                      <button className="btn-script" style={{ background: '#dc2626', padding: '4px 8px' }} onClick={() => handleDeleteClient(c.id, c.full_name)}>
+                        🗑️ Eliminar
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Modal Add Client */}
+          {showAddClientModal && (
+            <div className="script-modal">
+              <form className="script-modal-content" onSubmit={handleCreateClient}>
+                <div className="script-modal-header">
+                  <h3>+ Agregar Nuevo Cliente</h3>
+                  <button type="button" className="close-btn" onClick={() => setShowAddClientModal(false)}>✕</button>
+                </div>
+                <div className="form-group">
+                  <label>Nombre Completo:</label>
+                  <input type="text" required value={newClient.full_name} onChange={(e) => setNewClient({...newClient, full_name: e.target.value})} placeholder="Ej: Juan Pérez" />
+                </div>
+                <div className="form-group">
+                  <label>Email:</label>
+                  <input type="email" required value={newClient.email} onChange={(e) => setNewClient({...newClient, email: e.target.value})} placeholder="juan@gmail.com" />
+                </div>
+                <div className="form-group">
+                  <label>Teléfono / WhatsApp:</label>
+                  <input type="text" value={newClient.phone} onChange={(e) => setNewClient({...newClient, phone: e.target.value})} placeholder="+56912345678" />
+                </div>
+                <div className="form-group">
+                  <label>Red Social de Captura:</label>
+                  <select value={newClient.social_platform} onChange={(e) => setNewClient({...newClient, social_platform: e.target.value})}>
+                    <option value="whatsapp">WhatsApp</option>
+                    <option value="facebook">Facebook</option>
+                    <option value="instagram">Instagram</option>
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label>Dirección MAC Dispositivo (opcional):</label>
+                  <input type="text" value={newClient.mac_address} onChange={(e) => setNewClient({...newClient, mac_address: e.target.value})} placeholder="AA:BB:CC:DD:EE:FF" />
+                </div>
+                <button type="submit" className="btn-copy">💾 Guardar Cliente</button>
+              </form>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* TAB: OFERTAS */}
+      {activeTab === 'offers' && (
+        <div className="tab-view-container">
+          <div className="device-action-bar">
+            <h2>🎁 Ofertas & Promociones Hotspot</h2>
+            <button className="btn-add-device" onClick={() => setShowAddOfferModal(true)}>
+              + Crear Nueva Oferta
+            </button>
+          </div>
+
+          <div className="table-card">
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Nombre Oferta</th>
+                  <th>Tipo</th>
+                  <th>Descuento</th>
+                  <th>Estado</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                {offersList.length === 0 ? (
+                  <tr><td colSpan={6} className="empty-row">No hay ofertas creadas aún</td></tr>
+                ) : offersList.map((o, i) => (
+                  <tr key={o.id}>
+                    <td><span className="rank">{i + 1}</span></td>
+                    <td className="offer-name"><strong>{o.name}</strong><br/><small style={{ color: '#94a3b8' }}>{o.description}</small></td>
+                    <td>{o.offer_type}</td>
+                    <td>{o.discount_value}{o.discount_type === 'percent' ? '%' : '$'}</td>
+                    <td><span className={`status-pill ${o.status === 'active' ? 'online' : 'offline'}`}>{o.status}</span></td>
+                    <td>
+                      <button className="btn-script" style={{ background: '#dc2626', padding: '4px 8px' }} onClick={() => handleDeleteOffer(o.id, o.name)}>
+                        🗑️ Eliminar
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Modal Add Offer */}
+          {showAddOfferModal && (
+            <div className="script-modal">
+              <form className="script-modal-content" onSubmit={handleCreateOffer}>
+                <div className="script-modal-header">
+                  <h3>+ Crear Nueva Oferta Promocional</h3>
+                  <button type="button" className="close-btn" onClick={() => setShowAddOfferModal(false)}>✕</button>
+                </div>
+                <div className="form-group">
+                  <label>Título de la Oferta:</label>
+                  <input type="text" required value={newOffer.name} onChange={(e) => setNewOffer({...newOffer, name: e.target.value})} placeholder="Ej: 20% Dcto en Hamburguesas" />
+                </div>
+                <div className="form-group">
+                  <label>Descripción:</label>
+                  <textarea required style={{ background: '#0f172a', color: '#fff', border: '1px solid #334155', borderRadius: '6px', padding: '8px' }} value={newOffer.description} onChange={(e) => setNewOffer({...newOffer, description: e.target.value})} placeholder="Muestra esta pantalla en caja para hacer efectivo tu descuento." />
+                </div>
+                <div className="form-group">
+                  <label>Valor del Descuento:</label>
+                  <input type="number" required value={newOffer.discount_value} onChange={(e) => setNewOffer({...newOffer, discount_value: Number(e.target.value)})} />
+                </div>
+                <div className="form-group">
+                  <label>Tipo de Descuento:</label>
+                  <select value={newOffer.discount_type} onChange={(e) => setNewOffer({...newOffer, discount_type: e.target.value})}>
+                    <option value="percent">% Porcentaje</option>
+                    <option value="fixed">$ Monto Fijo</option>
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label>Estado de la Oferta:</label>
+                  <select value={newOffer.status} onChange={(e) => setNewOffer({...newOffer, status: e.target.value})}>
+                    <option value="active">Activa</option>
+                    <option value="draft">Borrador</option>
+                    <option value="paused">Pausada</option>
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label>URL Imagen Banner:</label>
+                  <input type="text" required value={newOffer.banner_image} onChange={(e) => setNewOffer({...newOffer, banner_image: e.target.value})} />
+                </div>
+                <button type="submit" className="btn-copy">🎁 Publicar Oferta</button>
+              </form>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* TAB: SESIONES */}
+      {activeTab === 'sessions' && (
+        <div className="tab-view-container">
+          <div className="device-action-bar">
+            <h2>📶 Historial de Sesiones Hotspot</h2>
+          </div>
+
+          <div className="table-card">
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Cliente</th>
+                  <th>MAC Address</th>
+                  <th>IP Conexión</th>
+                  <th>Fecha Conexión</th>
+                  <th>Subida (MB)</th>
+                  <th>Bajada (MB)</th>
+                </tr>
+              </thead>
+              <tbody>
+                {sessionsList.length === 0 ? (
+                  <tr><td colSpan={7} className="empty-row">No hay sesiones registradas aún</td></tr>
+                ) : sessionsList.map((s, i) => (
+                  <tr key={s.id}>
+                    <td><span className="rank">{i + 1}</span></td>
+                    <td>{s.client_name || `Cliente #${s.client}`}</td>
+                    <td><code style={{ fontSize: '11px', color: '#94a3b8' }}>{s.mac_address}</code></td>
+                    <td>{s.ip_address}</td>
+                    <td className="date-cell">{new Date(s.connected_at).toLocaleString('es-CL')}</td>
+                    <td>{(s.data_uploaded / 1048576).toFixed(2)} MB</td>
+                    <td>{(s.data_downloaded / 1048576).toFixed(2)} MB</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
       )}
     </div>
   );

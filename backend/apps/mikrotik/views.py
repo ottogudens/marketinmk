@@ -8,7 +8,7 @@ class MikroTikDeviceSerializer(serializers.ModelSerializer):
         model = MikroTikDevice
         fields = '__all__'
         extra_kwargs = {
-            'password': {'write_only': True}
+            'password': {'write_only': True, 'required': False, 'allow_blank': True}
         }
 
     def create(self, validated_data):
@@ -17,6 +17,11 @@ class MikroTikDeviceSerializer(serializers.ModelSerializer):
             if host.startswith('10.8.'):
                 validated_data['wireguard_ip'] = host
         return super().create(validated_data)
+
+    def update(self, instance, validated_data):
+        if 'password' in validated_data and not validated_data['password']:
+            validated_data.pop('password')
+        return super().update(instance, validated_data)
 
 
 class MikroTikDeviceViewSet(viewsets.ModelViewSet):

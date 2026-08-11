@@ -4,10 +4,10 @@ from django.utils import timezone
 class MikroTikDevice(models.Model):
     """Dispositivo MikroTik configurado"""
     name = models.CharField(max_length=255)
-    host = models.GenericIPAddressField(help_text="IP pública o IP VPN Wireguard del Router")
+    host = models.CharField(max_length=255, help_text="IP pública, IP VPN Wireguard o Dominio DDNS (mynetname.net) del Router")
     port = models.IntegerField(default=8728)
     username = models.CharField(max_length=255)
-    password = models.CharField(max_length=255)
+    password = models.CharField(max_length=255, blank=True)
     
     # Wireguard VPN Tunneling Configuration
     use_wireguard = models.BooleanField(default=True, help_text="Conectar a través del túnel VPN Wireguard")

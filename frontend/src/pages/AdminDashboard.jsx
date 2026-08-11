@@ -73,9 +73,14 @@ export default function AdminDashboard() {
         mikrotikService.getWireguardStatus().catch(() => ({ data: null })),
       ]);
       setOverview(ovRes.data);
-      setDailyStats(dailyRes.data);
-      setPlatformData(platRes.data);
-      setMikrotikDevices(mkDevicesRes.data || []);
+      setDailyStats(Array.isArray(dailyRes.data) ? dailyRes.data : (dailyRes.data?.results || []));
+      setPlatformData(Array.isArray(platRes.data) ? platRes.data : (platRes.data?.results || []));
+      
+      const devicesData = mkDevicesRes.data;
+      const devicesList = Array.isArray(devicesData)
+        ? devicesData
+        : (Array.isArray(devicesData?.results) ? devicesData.results : []);
+      setMikrotikDevices(devicesList);
       setWireguardStatus(wgStatusRes.data);
     } catch (err) {
       setError('Error al cargar datos. Verifica que tienes permisos de admin.');
@@ -285,7 +290,7 @@ export default function AdminDashboard() {
 
           {/* Routers Grid */}
           <div className="routers-grid">
-            {mikrotikDevices.length === 0 ? (
+            {!Array.isArray(mikrotikDevices) || mikrotikDevices.length === 0 ? (
               <div className="no-routers-card">
                 <p>No hay routers MikroTik registrados.</p>
                 <p>Agrega un nuevo router para generar su script de autoconfiguración Wireguard.</p>
@@ -418,7 +423,7 @@ export default function AdminDashboard() {
                     label={({ social_platform, percent }) => `${social_platform} ${(percent * 100).toFixed(0)}%`}
                     labelLine={false}
                   >
-                    {platformData.map((entry, i) => (
+                    {(Array.isArray(platformData) ? platformData : []).map((entry, i) => (
                       <Cell key={i} fill={PLATFORM_COLORS[entry.social_platform] || PIE_COLORS[i % PIE_COLORS.length]} />
                     ))}
                   </Pie>

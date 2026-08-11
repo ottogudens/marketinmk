@@ -17,3 +17,4 @@ class MikroTikDeviceViewSet(viewsets.ModelViewSet):
     queryset = MikroTikDevice.objects.all()
     serializer_class = MikroTikDeviceSerializer
     permission_classes = [IsAdminUser]
+    pagination_class = None

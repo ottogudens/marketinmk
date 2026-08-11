@@ -113,6 +113,34 @@ export default function AdminDashboard() {
     }
   };
 
+  const [editingDevice, setEditingDevice] = useState(null);
+
+  const handleSaveEditDevice = async (e) => {
+    e.preventDefault();
+    if (!editingDevice) return;
+    try {
+      const payload = { ...editingDevice };
+      if (!payload.password) delete payload.password; // No sobrescribir pass si está vacía
+      await mikrotikService.updateDevice(editingDevice.id, payload);
+      alert('Dispositivo actualizado correctamente.');
+      setEditingDevice(null);
+      loadData();
+    } catch (err) {
+      alert('Error al actualizar el dispositivo.');
+    }
+  };
+
+  const handleDeleteDevice = async (deviceId, name) => {
+    if (window.confirm(`¿Estás seguro de que deseas eliminar el router "${name}"?`)) {
+      try {
+        await mikrotikService.deleteDevice(deviceId);
+        loadData();
+      } catch (err) {
+        alert('Error al eliminar el dispositivo.');
+      }
+    }
+  };
+
   const handleUpdatePubKey = async (deviceId, currentKey) => {
     const key = prompt('Ingresa la Clave Pública Wireguard (public-key) enviada por tu RouterOS:', currentKey || '');
     if (key !== null) {
@@ -326,10 +354,16 @@ export default function AdminDashboard() {
                   </div>
                   <div className="router-card-actions">
                     <button className="btn-script" onClick={() => handleGetScript(dev.id)}>
-                      📜 Script RouterOS
+                      📜 Script
                     </button>
                     <button className="btn-script" style={{ background: '#2563eb' }} onClick={() => handleUpdatePubKey(dev.id, dev.wireguard_public_key)}>
-                      🔑 Clave Pública
+                      🔑 Clave WG
+                    </button>
+                    <button className="btn-script" style={{ background: '#475569' }} onClick={() => setEditingDevice({ ...dev, password: '' })}>
+                      ✏️ Editar
+                    </button>
+                    <button className="btn-script" style={{ background: '#dc2626' }} onClick={() => handleDeleteDevice(dev.id, dev.name)}>
+                      🗑️
                     </button>
                   </div>
                 </div>
@@ -364,11 +398,15 @@ export default function AdminDashboard() {
                 </div>
                 <div className="form-group">
                   <label>Nombre de la Sucursal / Router:</label>
-                  <input type="text" required value={newDevice.name} onChange={(e) => setNewDevice({...newDevice, name: e.target.value})} placeholder="Ej: Sucursal Santiago Centro" />
+                  <input type="text" required value={newDevice.name} onChange={(e) => setNewDevice({...newDevice, name: e.target.value})} placeholder="Ej: Sucursal Santiago" />
                 </div>
                 <div className="form-group">
-                  <label>IP Asignada en VPN Wireguard:</label>
-                  <input type="text" required value={newDevice.host} onChange={(e) => setNewDevice({...newDevice, host: e.target.value})} placeholder="10.8.0.2" />
+                  <label>IP Host o Dominio DDNS (mynetname.net):</label>
+                  <input type="text" required value={newDevice.host} onChange={(e) => setNewDevice({...newDevice, host: e.target.value})} placeholder="Ej: 123456.sn.mynetname.net o 10.8.0.2" />
+                </div>
+                <div className="form-group">
+                  <label>Puerto API RouterOS:</label>
+                  <input type="number" required value={newDevice.port} onChange={(e) => setNewDevice({...newDevice, port: Number(e.target.value)})} placeholder="8728" />
                 </div>
                 <div className="form-group">
                   <label>Usuario API RouterOS:</label>
@@ -378,7 +416,52 @@ export default function AdminDashboard() {
                   <label>Contraseña API RouterOS:</label>
                   <input type="password" required value={newDevice.password} onChange={(e) => setNewDevice({...newDevice, password: e.target.value})} />
                 </div>
+                <div className="form-group" style={{ flexDirection: 'row', alignItems: 'center', gap: '8px' }}>
+                  <input type="checkbox" id="use_wg_add" checked={newDevice.use_wireguard} onChange={(e) => setNewDevice({...newDevice, use_wireguard: e.target.checked})} />
+                  <label htmlFor="use_wg_add" style={{ margin: 0 }}>Usar VPN Wireguard</label>
+                </div>
                 <button type="submit" className="btn-copy">Guardar y Generar Script VPN</button>
+              </form>
+            </div>
+          )}
+
+          {/* Modal Edit Device */}
+          {editingDevice && (
+            <div className="script-modal">
+              <form className="script-modal-content" onSubmit={handleSaveEditDevice}>
+                <div className="script-modal-header">
+                  <h3>✏️ Editar Router: {editingDevice.name}</h3>
+                  <button type="button" className="close-btn" onClick={() => setEditingDevice(null)}>✕</button>
+                </div>
+                <div className="form-group">
+                  <label>Nombre del Router / Sucursal:</label>
+                  <input type="text" required value={editingDevice.name || ''} onChange={(e) => setEditingDevice({...editingDevice, name: e.target.value})} />
+                </div>
+                <div className="form-group">
+                  <label>IP Host o Dominio DDNS (mynetname.net / IP pública):</label>
+                  <input type="text" required value={editingDevice.host || ''} onChange={(e) => setEditingDevice({...editingDevice, host: e.target.value})} placeholder="Ej: 123456789abc.sn.mynetname.net" />
+                </div>
+                <div className="form-group">
+                  <label>Puerto API RouterOS:</label>
+                  <input type="number" required value={editingDevice.port || 8728} onChange={(e) => setEditingDevice({...editingDevice, port: Number(e.target.value)})} />
+                </div>
+                <div className="form-group">
+                  <label>Usuario API RouterOS:</label>
+                  <input type="text" required value={editingDevice.username || ''} onChange={(e) => setEditingDevice({...editingDevice, username: e.target.value})} />
+                </div>
+                <div className="form-group">
+                  <label>Nueva Contraseña API (dejar en blanco para mantener la actual):</label>
+                  <input type="password" value={editingDevice.password || ''} onChange={(e) => setEditingDevice({...editingDevice, password: e.target.value})} placeholder="••••••••" />
+                </div>
+                <div className="form-group">
+                  <label>IP VPN Wireguard asignada (opcional):</label>
+                  <input type="text" value={editingDevice.wireguard_ip || ''} onChange={(e) => setEditingDevice({...editingDevice, wireguard_ip: e.target.value})} placeholder="10.8.0.2" />
+                </div>
+                <div className="form-group" style={{ flexDirection: 'row', alignItems: 'center', gap: '8px' }}>
+                  <input type="checkbox" id="use_wg_edit" checked={!!editingDevice.use_wireguard} onChange={(e) => setEditingDevice({...editingDevice, use_wireguard: e.target.checked})} />
+                  <label htmlFor="use_wg_edit" style={{ margin: 0 }}>Usar VPN Wireguard</label>
+                </div>
+                <button type="submit" className="btn-copy">💾 Guardar Cambios</button>
               </form>
             </div>
           )}

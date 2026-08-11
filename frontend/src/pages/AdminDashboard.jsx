@@ -197,11 +197,18 @@ export default function AdminDashboard() {
   const handleCreateOffer = async (e) => {
     e.preventDefault();
     try {
-      await offerService.create(newOffer);
+      const payload = {
+        ...newOffer,
+        start_date: newOffer.start_date ? new Date(newOffer.start_date).toISOString() : new Date().toISOString(),
+        end_date: newOffer.end_date ? new Date(newOffer.end_date).toISOString() : new Date(Date.now() + 30 * 86400000).toISOString(),
+        discount_value: Number(newOffer.discount_value),
+        products: []
+      };
+      await offerService.create(payload);
       setShowAddOfferModal(false);
       loadData();
     } catch (err) {
-      alert('Error al crear la oferta.');
+      alert('Error al crear la oferta: ' + (err.response?.data ? JSON.stringify(err.response.data) : err.message));
     }
   };
 
@@ -346,11 +353,34 @@ export default function AdminDashboard() {
               </ol>
             </div>
 
+            {/* Google OAuth 2.0 */}
+            <div className="doc-card">
+              <div className="doc-card-title">
+                <span className="doc-icon" style={{ color: '#ea4335' }}>🔴</span>
+                <h3>3. Integración con Google Identity (OAuth 2.0)</h3>
+              </div>
+              <ol className="doc-steps">
+                <li>Ingresa a <a href="https://console.cloud.google.com/" target="_blank" rel="noreferrer">Google Cloud Console</a>.</li>
+                <li>Crea un proyecto → Ve a <strong>APIs y Servicios</strong> → <strong>Pantalla de consentimiento de OAuth</strong> (Usuario Externo).</li>
+                <li>Dirígete a <strong>Credenciales → Crear Credenciales → ID de cliente de OAuth</strong> (Tipo: Aplicación Web).</li>
+                <li>Registra los orígenes e URIs de redirección autorizados:
+                  <pre className="code-box">
+                    {`Orígenes de JavaScript autorizados:\nhttps://web-production-4bdaa.up.railway.app\n\nURIs de redirección autorizadas:\nhttps://web-production-4bdaa.up.railway.app/callback/google`}
+                  </pre>
+                </li>
+                <li>Copia tu <strong>Client ID</strong> y <strong>Client Secret</strong> y configúralos en Railway:
+                  <pre className="code-box">
+                    {`VITE_GOOGLE_CLIENT_ID=tu_google_client_id.apps.googleusercontent.com\nGOOGLE_CLIENT_SECRET=tu_google_client_secret`}
+                  </pre>
+                </li>
+              </ol>
+            </div>
+
             {/* WhatsApp Business / Twilio */}
             <div className="doc-card full">
               <div className="doc-card-title">
                 <span className="doc-icon wa">💬</span>
-                <h3>3. Configuración de Mensajería WhatsApp (Twilio Sandbox / Prod)</h3>
+                <h3>4. Configuración de Mensajería WhatsApp (Twilio Sandbox / Prod)</h3>
               </div>
               <ol className="doc-steps">
                 <li>Accede a tu consola en <a href="https://console.twilio.com/" target="_blank" rel="noreferrer">Twilio Console</a>.</li>

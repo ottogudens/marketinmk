@@ -83,18 +83,25 @@ class OfferViewSerializer(serializers.ModelSerializer):
         ]
 
 
+from django.utils import timezone
+
 class OfferCreateSerializer(serializers.ModelSerializer):
     """Serializer para crear ofertas (admin)"""
+    products = serializers.PrimaryKeyRelatedField(many=True, queryset=Product.objects.all(), required=False, default=list)
+    start_date = serializers.DateTimeField(required=False)
+    end_date = serializers.DateTimeField(required=False)
+
     class Meta:
         model = Offer
-        fields = [
-            'name', 'description', 'offer_type', 'discount_value',
-            'discount_type', 'banner_image', 'cta_text', 'start_date',
-            'end_date', 'products', 'min_purchase', 'max_uses',
-            'target_all', 'target_first_time', 'target_repeat',
-            'min_visits', 'show_on_splash', 'send_whatsapp',
-            'whatsapp_delay_minutes'
-        ]
+        fields = '__all__'
+
+    def create(self, validated_data):
+        if not validated_data.get('start_date'):
+            validated_data['start_date'] = timezone.now()
+        if not validated_data.get('end_date'):
+            validated_data['end_date'] = timezone.now() + timezone.timedelta(days=30)
+        return super().create(validated_data)
+
 
 
 class CouponSerializer(serializers.ModelSerializer):
